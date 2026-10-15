@@ -17,7 +17,7 @@ ME_DIR = BASE_DIR / "me"
 LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
-MAX_HISTORY = 10        # short-term memory: how many recent messages are sent to the model
+MAX_HISTORY = 20        # short-term memory: how many recent messages (10 exchanges) are sent to the model
 MAX_TOOL_ROUNDS = 4     # safety cap on tool-call loops per turn
 
 
