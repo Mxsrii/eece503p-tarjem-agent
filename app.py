@@ -266,6 +266,10 @@ def reflect_on_draft(user_message, draft, intent, email_known=False, history=Non
     return {"issues": issues, "revised": revised, "changed": changed}
 
 
+ERROR_REPLY = ("Sorry, I'm having trouble right now. Please try again in a moment, "
+               "or email us at hello@tarjem.example.")
+
+
 def agent_turn(message, history=None, reflect=True):
     history = normalize_history(history)[-MAX_HISTORY:]
     route = route_message(message, history)
@@ -276,7 +280,13 @@ def agent_turn(message, history=None, reflect=True):
     tool_events, draft = [], None
 
     for _ in range(MAX_TOOL_ROUNDS):
-        resp = client.chat.completions.create(model=MODEL, messages=messages, tools=INTENT_TOOLS[intent])
+        try:
+            resp = client.chat.completions.create(model=MODEL, messages=messages, tools=INTENT_TOOLS[intent])
+        except Exception as e:                       # API down, rate limit, bad key: reply politely, keep the log
+            log_event("errors.jsonl", {"stage": "agent", "message": message, "error": f"{type(e).__name__}: {e}"})
+            print(f"  [ERROR] agent call failed ({type(e).__name__}): {e}")
+            return {"reply": ERROR_REPLY, "draft": ERROR_REPLY, "intent": intent, "route": route,
+                    "tool_events": tool_events, "reflection": None}
         msg = resp.choices[0].message
         if not msg.tool_calls:                       # no tool needed: this is the reply
             draft = (msg.content or "").strip()
