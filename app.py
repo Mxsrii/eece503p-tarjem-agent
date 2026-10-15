@@ -308,41 +308,72 @@ def agent_turn(message, history=None, reflect=True):
 import gradio as gr
 
 
-def format_trace(result):
-    lines = [f"Router  : {result['intent']}  ({result['route']['method']}) - {result['route']['reason']}"]
-    for e in result["tool_events"]:
-        lines.append(f"Tool    : {e['tool']}({e['arguments']})\n          -> {e['result']}")
-    if not result["tool_events"]:
-        lines.append("Tool    : none")
-    r = result["reflection"]
-    if r is None:
-        lines.append("Reflect : off")
-    elif r["changed"]:
-        lines.append("Reflect : REVISED the draft\n          issues: " + "; ".join(r["issues"])
-                     + "\n          draft  : " + result["draft"])
-    else:
-        lines.append("Reflect : draft passed review")
-    return "\n".join(lines)
-
-
 def chat(message, history):
-    result = agent_turn(message, history)
-    return result["reply"], format_trace(result)
+    return agent_turn(message, history)["reply"]
 
 
 EXAMPLES = [
     "What languages do you translate?",
-    "How much for a 2-page diploma, Arabic to English?",
-    "I need my birth certificate translated into French for a visa.",
-    "Will the Canadian embassy accept your translation?",
-    "My last order arrived a day late and I'm not happy.",
+    "How much does a translation cost?",
+    "How long does a translation take?",
+    "I need a document translated.",
 ]
+EXAMPLE_LABELS = ["Languages", "Prices", "Turnaround time", "Get a quote"]
+
+THEME = gr.themes.Soft(primary_hue="teal")
+CSS = """
+.gradio-container { max-width: 820px !important; margin: 0 auto; }
+
+/* Empty chat: centred greeting, then a tidy grid of example cards */
+#chat .placeholder-content {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--size-4); height: 100%; padding: var(--size-12) var(--size-4) var(--size-6); text-align: center;
+}
+#chat .placeholder { flex: 0 0 auto !important; height: auto !important; max-width: 34rem; margin: 0; padding: 0; min-height: 0; }
+#chat .placeholder h3 { margin: 0 0 var(--size-2); font-size: var(--text-xxl); }
+#chat .placeholder p { margin: 0 0 var(--size-2); color: var(--body-text-color); }
+#chat .placeholder p:last-child { margin: var(--size-4) 0 0; font-size: var(--text-sm); }
+#chat .examples {
+    display: grid !important; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--size-2);
+    width: 100%; max-width: 34rem; margin: 0 !important; padding: 0 !important;
+}
+#chat .example {
+    width: 100% !important; min-width: 0 !important; margin: 0 !important;
+    padding: var(--size-3) var(--size-4) !important; text-align: left;
+    border: 1px solid var(--border-color-primary) !important; border-radius: var(--radius-lg) !important;
+    background: var(--background-fill-primary) !important; cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+}
+#chat .example:hover { border-color: var(--color-accent) !important; background: var(--color-accent-soft) !important; }
+#chat .example:last-child:nth-child(odd) { grid-column: 1 / -1; }
+#chat .example-content, #chat .example-text-content { width: 100%; text-align: left; }
+@media (max-width: 640px) {
+    #chat .examples { grid-template-columns: 1fr; }
+    #chat .placeholder-content { gap: var(--size-3); padding: var(--size-10) var(--size-3) var(--size-4); }
+    #chat .example { padding: var(--size-2) var(--size-4) !important; }
+}
+"""
 
 with gr.Blocks(title="Tarjem - Layla") as demo:
-    gr.Markdown("## Tarjem Certified Translation Bureau\nChat with **Layla**, our virtual concierge.")
-    trace_box = gr.Textbox(label="Agent trace (router, tools, reflection)", lines=7, interactive=False)
-    gr.ChatInterface(fn=chat, additional_outputs=[trace_box], examples=EXAMPLES, fill_height=False)
+    gr.Markdown(
+        "# Tarjem Certified Translation Bureau\n"
+        "Chat with **Layla**, our virtual concierge. She is an AI assistant, so please don't share passport, ID "
+        "or payment details here. Documents are sent later by email."
+    )
+    with gr.Column(elem_id="chat"):
+        gr.ChatInterface(
+            fn=chat,
+            chatbot=gr.Chatbot(
+                label="Layla", height=560, buttons=["copy", "copy_all"], render=False,
+                placeholder="### Hi, I'm Layla\n\nTarjem's virtual concierge. Ask me about our services, prices and "
+                            "turnaround, or tell me about a document and I'll help you get a quote.\n\n"
+                            "Not sure where to start? Try one of these:",
+            ),
+            textbox=gr.Textbox(placeholder="Ask about prices, turnaround or a quote...",
+                               container=False, autofocus=True, render=False),
+            examples=EXAMPLES, example_labels=EXAMPLE_LABELS, fill_height=False, concurrency_limit=4,
+        )
 
 
 if __name__ == "__main__":
-    demo.launch()
+    demo.launch(theme=THEME, css=CSS)

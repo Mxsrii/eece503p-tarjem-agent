@@ -13,7 +13,7 @@ Each customer message goes through four stages:
    - `record_feedback(question)` saves unanswered questions, complaints and suggestions to `logs/feedback.jsonl`.
 4. **Reflection (bonus).** A reviewer call checks the draft reply against the rules (invented facts, promises of embassy acceptance, legal advice, missing email request, persona) and rewrites it if needed. Drafts and revisions are logged to `logs/reflection.jsonl`.
 
-Short-term memory is the last 10 messages of the conversation. The Gradio UI shows an **agent trace** box with the router decision, tool calls and reflection result for each turn.
+Short-term memory is the last 10 messages of the conversation. The Gradio UI is a clean customer chat; the router, tool and reflection details are printed to the console and written to `logs/`, not shown to the customer.
 
 ## Project layout
 
