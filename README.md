@@ -20,7 +20,7 @@ Short-term memory is the last 20 messages (10 exchanges) of the conversation. Th
 | Path | Purpose |
 |---|---|
 | `business_agent.ipynb` | Step-by-step notebook: knowledge loading, persona, tools, router, agent loop, reflection, tests, Gradio UI |
-| `app.py` | The same agent as a standalone Gradio app (used for Hugging Face Spaces) |
+| `app.py` | The same agent as a standalone Gradio app (run with `python app.py`) |
 | `me/about_business.pdf` | Business profile (read with `pypdf`) |
 | `me/business_summary.txt` | Business summary: services, prices, policies, team |
 | `requirements.txt` | Python dependencies |
@@ -43,30 +43,6 @@ python app.py                     # opens the Gradio app at http://127.0.0.1:786
 Or open `business_agent.ipynb` and run the cells top to bottom.
 
 The model defaults to `gpt-4.1`. Set `OPENAI_MODEL` in `.env` to use another one. The router and reflection calls use `temperature=0`, so models that reject a custom temperature (the gpt-5 family) need that argument removed.
-
-## Deploy to Hugging Face Spaces
-
-1. Create a new Space at huggingface.co/new-space with the **Gradio** SDK, then push this repository's files to it (it must contain `app.py`, `requirements.txt`, `README.md` and the `me/` folder).
-2. Put this configuration block at the very top of the **Space's** `README.md`. Hugging Face reads it to know how to run the app. It is not kept in the GitHub README because GitHub would show it as a table.
-
-   ```yaml
-   ---
-   title: Tarjem - Layla
-   emoji: 📄
-   colorFrom: green
-   colorTo: blue
-   sdk: gradio
-   sdk_version: 6.30.0
-   app_file: app.py
-   pinned: false
-   short_description: Virtual concierge for a certified translation bureau
-   ---
-   ```
-
-3. In the Space, open **Settings > Variables and secrets** and add a **secret** named `OPENAI_API_KEY`. Optionally add a variable `OPENAI_MODEL`.
-4. The Space builds and starts automatically. Do not upload `.env`.
-
-The Space's disk is temporary, so `logs/` is cleared whenever it restarts. Leads and feedback are also printed to the Space's container log.
 
 ## Try these messages
 
